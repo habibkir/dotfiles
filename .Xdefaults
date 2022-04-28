@@ -1,0 +1,5 @@
+URxvt.scrollBar: false
+URxvt.background: Black
+URxvt.foreground: Gray90
+URxvt.font: xft:DejaVu Sans Mono:pixelsize=14
+URxvt.scrollWithBuffer: true
