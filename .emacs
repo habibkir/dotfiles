@@ -1,63 +1,96 @@
 (require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages") t)
-;;for geiser
-(add-to-list 'package-archives '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
-(package-initialize)
+;(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;(add-to-list 'package-archives '("nongnu" . "https://elpa.nongnu.org/nongnu/"));;geiser
+;(package-initialize) (package-refresh-contents)
+;(unless (package-installed-p 'evil) (package-install 'evil))
+;(unless (package-installed-p 'neotree) (package-install 'neotree))
+;(unless (package-installed-p 'use-package) (package-install 'use-package))
+;(unless (package-installed-p 'flycheck) (package-install 'flycheck))
+;(unless (package-installed-p 'evil-org) (package-install 'evil-org))
+;(unless (package-installed-p 'auto-complete) (package-install 'auto-complete))
 
-;;now, from evil mode's github
-;;uncomment if you want
-;;(package-refresh-contents)
+;;require packages and some defaults with the packages
+;currently too lazy to spend two minutes learning use-package
+(require 'evil) (evil-mode 1)
+(require 'neotree) (setq neotree-smart-open t)
+(require 'flycheck) (global-flycheck-mode)
+(require 'auto-complete)
+(ac-config-default)
+(setq ac-auto-start 4)
+(define-key ac-completing-map "\r" nil)
 
+(require 'evil-org)
+(add-hook 'org-mode-hook 'evil-org-mode)
+(evil-org-set-key-theme '(navigation insert textobjects additional calendar))
+(require 'evil-org-agenda)
+(evil-org-agenda-set-keys)
+
+;;convenience and sanity
+(setq scroll-conservatively most-positive-fixnum)
+(setq ring-bell-function 'ignore)
 (setq make-backup-files nil)
 (setq auto-save-default nil)
-
+(menu-bar-mode nil)
 (show-paren-mode t)
+;blaitant violation of the DRY principle, but I don't want a defun in my .emacs
+(add-hook 'latex-mode-hook (lambda () (progn
+					(auto-fill-mode -1)
+					(setq truncate-lines t)
+					(setq truncate-partial-width-windows t))))
+(add-hook 'org-mode-hook (lambda () (progn
+					(auto-fill-mode -1)
+					(setq truncate-lines t)
+					(setq truncate-partial-width-windows t))))
+(modify-coding-system-alist 'file "\\.tex\\'" 'utf-8)
 
-;;usa un font grosso
-(setq default-frame-alist '((font . "Consolata-14")))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-(setq scroll-conservatively most-positive-fixnum)
-
-(global-set-key "\M-w" 'shell-command)
-
-;;install evil
-;;(unless (package-installed-p 'evil) (package-install 'evil))
-
-(require 'evil)
-(evil-mode 1)
-
-;;install slime
-;;made this part up, plz don't kill me daddy rms
-(unless (package-installed-p 'slime) (package-install 'slime))
-
-(require 'slime)
-
-(setq inferior-lisp-program "clisp")
-
-;;enable railscast theme
-(add-to-list 'custom-theme-load-path (file-name-as-directory "~/.emacs.d/railscast-theme.el"))
+;;aesthetic changes
+(set-face-attribute 'default nil :family "JetBrains Mono" :height 125)
+(add-to-list 'custom-theme-load-path
+	     (file-name-as-directory "C:\\Users\\biggu\\AppData\\Roaming\\.emacs.d"))
 (load-theme 'railscast t t)
 (enable-theme 'railscast)
 
-;;neotree (too lazy to figure treemacs out)
-(add-to-list 'load-path "~/.emacs.d/neotree")
-(require 'neotree)
+;https://github.com/technomancy/better-defaults/blob/master/better-defaults.el
+(unless (eq window-system 'ns)
+  (menu-bar-mode -1))
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
+(when (fboundp 'scroll-bar-mode)
+  (scroll-bar-mode -1))
+(when (fboundp 'horizontal-scroll-bar-mode)
+  (horizontal-scroll-bar-mode -1))
+
+(setq c-basic-offset 4)
+
+;;Custom keybinds, reduce Control_R supremacy
 (global-set-key "\M-q" 'neotree-toggle)
+(global-set-key "\M-w" 'shell-command)
+(global-set-key "\M-a" (lambda () (interactive) (other-window 1)))
 
-;;opzioni per neotree (copiate senza pudore dalla wiki)
-;;apri neotree in modo che il file su cui eri sia visibile e figo
-(setq neotree-smart-open t);;cazzo odio la parola smart
+;;evil specific custom keybinds
+;;absolutely I M P E R A T I V E, Alonzo Church is judging you
+(evil-define-key 'insert org-mode-map (kbd "TAB") 'org-cycle)
+(evil-set-leader 'normal (kbd "SPC"))
+(evil-set-leader 'insert (kbd "M-SPC"))
+(evil-define-key 'normal 'global (kbd "<leader>vs") 'split-window-right)
+(evil-define-key 'normal 'global (kbd "<leader>vq") 'delete-window)
+(evil-define-key 'normal 'global (kbd "<leader>vw") 'delete-other-windows)
 
-;;neotree con evil mode (spudoratamente dalla wiki, pure questo)
 (evil-define-key 'normal neotree-mode-map (kbd "TAB") 'neotree-enter)
 (evil-define-key 'normal neotree-mode-map (kbd "SPC") 'neotree-quick-look)
-(evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
 (evil-define-key 'normal neotree-mode-map (kbd "RET") 'neotree-enter)
+(evil-define-key 'normal neotree-mode-map (kbd "h") 'neotree-hidden-file-toggle)
 (evil-define-key 'normal neotree-mode-map (kbd "g") 'neotree-refresh)
+(evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
+
 (evil-define-key 'normal neotree-mode-map (kbd "j") 'neotree-next-line)
 (evil-define-key 'normal neotree-mode-map (kbd "k") 'neotree-previous-line)
-;;(evil-define-key 'normal neotree-mode-map (kbd "A") 'neotree-stretch-toggle)
-;;(evil-define-key 'normal neotree-mode-map (kbd "H") 'neotree-hidden-file-toggle)
+(evil-define-key 'normal neotree-mode-map (kbd "n") 'neotree-create-node)
+(evil-define-key 'normal neotree-mode-map (kbd "d") 'neotree-delete-node)
+(evil-define-key 'normal neotree-mode-map (kbd "r") 'neotree-rename-node)
+(evil-define-key 'normal neotree-mode-map (kbd "c") 'neotree-copy-node)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
