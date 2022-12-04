@@ -19,6 +19,7 @@
 ;(unless (package-installed-p 'geiser) (package-install 'geiser))
 ;(unless (package-installed-p 'geiser-racket) (package-install 'geiser-racket))
 ;(unless (package-installed-p 'ess) (package-install 'ess))
+;(unless (package-installed-p 'ediprolog) (package-install 'ediprolog))
 ;(unless (package-installed-p 'minizinc-mode) (package-install 'minizinc-mode))
 ;; minor
 ;(unless (package-installed-p 'beacon) (package-install 'beacon))
@@ -36,11 +37,14 @@
 (require 'sly)
 (require 'geiser)
 (require 'geiser-racket)
-(setq inferior-lisp-program "clisp") ;sbcl fa un po' male
+(setq inferior-lisp-program "sbcl") ;clisp in caso si ritorni a segfaultare
 (setq scheme-program-name "racket")
 
 (require 'ess) (setq ac-use-quick-help nil)
 ;(require 'minizinc-mode) (add-to-list 'auto-mode-alist '("\\.mzn\\'" . minizinc-mode))
+
+(require 'ediprolog)
+(setq prolog-system 'swi)
 
 (require 'org-tempo)
 	 
@@ -121,7 +125,7 @@
 (add-to-list 'custom-theme-load-path (file-name-as-directory "~/.emacs.d/elpa/"))
 ;; backup themes, dracula, midnight, clarity, cobalt
 ;; aalto-light for light mode
-(let ((theme 'railscast)) ; pugno in un occhio, ma funziona al sole
+(let ((theme 'deep-blue))
   (load-theme theme t t)
   (enable-theme theme))
 
@@ -185,11 +189,12 @@
  '(custom-safe-themes
    '("45482e7ddf47ab1f30fe05f75e5f2d2118635f5797687e88571842ff6f18b4d5" default))
  '(inhibit-startup-screen t)
+ '(org-confirm-babel-evaluate nil)
  '(org-format-latex-options
    '(:foreground default :background default :scale 1.5 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
 		 ("begin" "$1" "$" "$$" "\\(" "\\[")))
  '(package-selected-packages
-   '(beacon sly nord-theme minizinc-mode dracula-theme ess geiser-racket geiser auto-complete flycheck color-theme-modern neotree evil))
+   '(ediprolog beacon sly nord-theme minizinc-mode dracula-theme ess geiser-racket geiser auto-complete flycheck color-theme-modern neotree evil))
  '(warning-suppress-types '((comp) (comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
