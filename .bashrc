@@ -24,20 +24,20 @@ if [ -d ~/.bashrc.d ]; then
 	done
 fi
 
-#user defined aliases
-alias ll="ls -la"
-alias llg="ls -la | grep"
-alias mks="touch s && chmod u+x s && echo \"#! /bin/bash\" >> s && vim s"
-alias kys="shutdown now"
-alias emacs="emacs --no-window-system"
+set -o vi
+export EDITOR='/usr/bin/vim'
+export VISUAL='/usr/bin/vim'
+export XDG_CONFIG_HOME="$HOME/.config"
 
-#User added commands, beware, it might fuck the whole system, again
+alias ohno='flatpak run org.eclipse.Java'
+alias ls='ls --color'
+alias stallman='systemctl --user start emacs.service'
+alias stalfos='systemctl --user stop emacs.service'
 
-xrandr --output DSI-1 --rotate right
-setxkbmap -option caps:swapescape
-#set -o vi #uncomment if it doesn't fuck with emacs from console
-unclutter --timeout 4 &
-#setfont /usr/lib/kbd/consolefonts/lat4a-19.psfu.gz
+alias quello='cmake -S . -B build'
+alias quella='cd build; make'
+
+alias nvim-sync="nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'"
 
 unset rc
-
+. "$HOME/.cargo/env"
