@@ -18,18 +18,20 @@
 ;		      solarized-theme
 ;		      ;; ides
 ;		      sly
-;		      geiser
-;		      geiser-racket
+;		      ; geiser
+;		      ; geiser-racket
+;		      ; geiser-guile
 ;		      ess
 ;		      ediprolog
 ;		      auctex
 ;		      ;; language support
-;		      sxhkdrc-mode
+;		      sxhkdrc-mode (not supported in older emacsen)
 ;		      ;; utilities
 ;		      beacon
-;		      ;; this is where we get stupid
+;		      ;; and this is where things get get stupid
 ;		      yasnippet
 ;		      yasnippet-snippets
+;		      company
 ;		      )))
 ;  (mapc (lambda (pkg)
 ;	  (unless (package-installed-p pkg)
@@ -41,22 +43,51 @@
 
 (require 'evil)
 (evil-mode 1)
+(evil-emacs-state)
 
 ;; neotree
 (require 'neotree)
 (setq neotree-smart-open t)
 
 ;; flycheck
-(require 'flycheck)
-(global-flycheck-mode)
+; (require 'flycheck)
+; (global-flycheck-mode)
 
 ;; autocomplete
-(require 'auto-complete)
-(ac-config-default)
-(setq ac-auto-start 4)
-(define-key ac-completing-map "\r" nil)
+; (require 'auto-complete)
+; (ac-config-default)
+; (setq ac-auto-start 4)
+; (define-key ac-completing-map "\r" nil)
+;; company
+(require 'company)
+(add-hook 'after-init-hook  'global-company-mode)
+(setq company-miminum-prefix-length 3)
+;; https://emacs.stackexchange.com/questions/13286/
+(with-eval-after-load 'company
+  (define-key company-active-map (kbd "<return>") nil)
+  (define-key company-active-map (kbd "RET") nil)
+  (define-key company-active-map (kbd "<tab>") 'company-complete-selection))
+;; eglot
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+	       ;; mildly sacrilegous, sorry gerald
+	       '(scheme-mode . ("racket" "-l" "racket-langserver"))))
 
-;; autocomplete / ess
+(add-hook 'c-mode-hook 'eglot-enusre)
+(add-hook 'c++-mode-hook 'eglot-ensure)
+(add-hook 'scheme-mode-hook 'eglot-ensure)
+(add-hook 'python-mode-hook 'eglot-ensure)
+;; common lisp has no language server, eh
+
+;; lsp java
+(require 'lsp-java)
+(add-hook 'java-mode-hook #'lsp)
+
+;; general lsp bullshit
+(setq read-process-output-max (* 1024 1024))
+(setq gc-cons-threshold 51200000)
+
+;; ess
 (require 'ess)
 (setq ac-use-quick-help nil)
 
@@ -107,7 +138,7 @@
 (setq-default TeX-master nil)
 
 (add-hook 'LaTeX-mode-hook 'visual-line-mode)
-(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+; (add-hook 'LaTeX-mode-hook 'flyspell-mode) ; doesn't work too well for non english
 (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
 
 (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
@@ -115,12 +146,10 @@
 
 ;; other language settings
 (setq inferior-lisp-program "sbcl")
-;; just install sbcl from sourceforge like a fucking windows user
-;; becuase the dnf package is fucking segfaulting, god knows why
-;; thank you fedora, thank you kindly, dickwit
-(setq scheme-program-name "racket")
-(setq prolog-system 'swi)
+(setq scheme-program-name "guile3.0")
 (modify-coding-system-alist 'file "\\.tex\\'" 'utf-8)
+
+(setq prolog-system 'swi)
 
 ;;; personal preferences, convenience, and sanity
 (setq make-backup-files nil)
@@ -152,62 +181,75 @@
   (eww-open-file "/home/diccu/Documents/lang/cmake/mastering-cmake/bild/html/index.html"))
 
 ;; mild yasnippet abuse
-;; although abuse is often the intended use, it's emacs after all
-(setq *shorthand-snippet-alist*
-      '((?b . "\\mathbb")
-	(?c . "\\mathcal")
-	(?s . "\\sum")
-	(?l . "\\lim")
-	(?i . "\\int")
-	(?d . "_")
-	(?u . "^")))
-;; shorthands for latex symbols
-;; becuase I ain't making all those snippets for all the possible uses
-;; so we're gonna do le generate
+;; create snippets on the fly from a shorthand
+;; shorthands are single chars, expansion is described below 
+(setq *snippet-shorthand-list*
+      '((?b "\\mathbb" . 1)
+	(?c "\\mathcal" . 1)
+	(?f "\\frac" . 2)
+	(?s "\\sum" . 0)
+	(?l "\\lim" . 0)
+	(?i "\\int" . 0)
+	(?d "_" . 1)
+	(?u "^" . 1)))
+
+(defun shorthand-symbol (s) (cadr s))
+(defun shorthand-arg-count (s) (cddr s))
+
 (defun create-snippet-from-shorthand (short)
-  "Translates a shortened version of a snippet into something yasnippet can expand."
+  "the short arg is a shorthand for a snippet, retuns a yasnippet snippet created from the shorthand"
   ;; input cleanup
   (setq short (string-clean-whitespace short))
+  ;; now expand every char of the shorthand
+  ;; some initial setting
   (let ((s-len (length short))
-	(acc ""))
+	(acc "")
+	(index-in-snippet 1))
+    ;; then iterate every char of the shorthand
+    ;; appending the expansion to an accumulator
     (dotimes (i s-len)
-      (let ((c (aref short i))
-	    (index-in-snippet (+ i 1)))
-	(setq acc
-	      (concat acc
-		      (cdr (assoc c *shorthand-snippet-alist*))
-		      "{ $" (number-to-string index-in-snippet) " } "))))
+      (let* ((c (aref short i))
+	     (snip-description (assoc c *snippet-shorthand-list*))
+	     (snip-symbol (shorthand-symbol snip-description))
+	     (snip-arg-count (shorthand-arg-count snip-description)))
+	(setq acc (concat acc snip-symbol))
+	(dotimes (x snip-arg-count)
+	  (setq acc (concat acc "{ $" (number-to-string index-in-snippet) " } "))
+	  (setq index-in-snippet (1+ index-in-snippet)))))
     (concat acc "$0")))
 
 ;;; aesthetic changes
 ; (add-to-list 'default-frame-alist '(fullscreen . maximized)) ; (fucks with awesomewm window management)
 (set-face-attribute 'default nil :family "JetBrains Mono" :height 130)
+(add-to-list 'default-frame-alist '(undecorated . t))
 
 ;; color themes
 ;; load
-(add-to-list 'custom-theme-load-path
-	     (file-name-as-directory "~/.emacs.d/elpa/color-theme-modern"))
-(add-to-list 'custom-theme-load-path
-	     (file-name-as-directory "~/.emacs.d/elpa/dracula-theme"))
-(add-to-list 'custom-theme-load-path
-	     (file-name-as-directory "~/.emacs.d/elpa/"))
-(add-to-list 'custom-theme-load-path
-	     (file-name-as-directory "~/.emacs.d/themes/everforest-theme/"))
-(add-to-list 'custom-theme-load-path
-	     (file-name-as-directory "~/.emacs.d/themes/"))
-(setq muh-dark-theme 'everforest-hard-dark)
-(setq muh-light-theme 'everforest-hard-light)
-;;(setq catppuccin-flavor 'macchiato)
-(defun going-dark ()
-  (interactive)
-  (disable-theme muh-light-theme)
-  (load-theme muh-dark-theme t t)
-  (enable-theme muh-dark-theme))
-(defun going-light ()
-  (interactive)
-  (disable-theme muh-light-theme)
-  (load-theme muh-light-theme t t)
-  (enable-theme muh-light-theme))
+;(add-to-list 'custom-theme-load-path
+;	     (file-name-as-directory "~/.emacs.d/elpa/color-theme-modern"))
+;(add-to-list 'custom-theme-load-path
+;	     (file-name-as-directory "~/.emacs.d/elpa/dracula-theme"))
+;(add-to-list 'custom-theme-load-path
+;	     (file-name-as-directory "~/.emacs.d/elpa/"))
+;(add-to-list 'custom-theme-load-path
+;	     (file-name-as-directory "~/.emacs.d/themes/everforest-theme/"))
+;(add-to-list 'custom-theme-load-path
+;	     (file-name-as-directory "~/.emacs.d/themes/"))
+;(setq muh-dark-theme 'material)
+;(setq muh-light-theme 'acme)
+;(setq catppuccin-flavor 'macchiato)
+;(defun going-dark ()
+;  (interactive)
+;  (disable-theme muh-light-theme)
+;  (load-theme muh-dark-theme t t)
+;  (enable-theme muh-dark-theme))
+;(defun going-light ()
+;  (interactive)
+;  (disable-theme muh-dark-theme)
+;  (load-theme muh-light-theme t t)
+;  (enable-theme muh-light-theme))
+(defun going-dark() (interactive) (color-theme-sanityinc-tomorrow-eighties))
+(defun going-light() (interactive) (color-theme-sanityinc-tomorrow-day))
 (going-dark)
 ;; Backup themes, dracula, midnight, clarity, cobalt, solarized-dark, deep-blue, catppuccin
 ;; aalto-light for light mode
@@ -226,7 +268,18 @@
 (global-set-key "\C-x\C-b" 'ibuffer)
 (global-set-key "\C-x\C-b" 'ibuffer)
 
+;;; extremely unelegant and must be removed once I figure out how to make my keybinds cooler
+(define-key c-mode-map "\M-q" 'neotree-toggle)
+(define-key c++-mode-map "\M-q" 'neotree-toggle)
+(define-key java-mode-map "\M-q" 'neotree-toggle)
+(define-key python-mode-map "\M-q" 'neotree-toggle)
+
+(define-key lisp-mode-map "\M-q" 'neotree-toggle)
+; (define-key scheme-mode-map "\M-q" 'neotree-toggle) ; only works on wayland, I have no fucking clue either
+(define-key emacs-lisp-mode-map "\M-q" 'neotree-toggle)
+
 ;; neotree
+(global-unset-key "\M-q")
 (global-set-key "\M-q" 'neotree-toggle)
 (global-set-key "\M-w" 'shell-command)
 (global-set-key "\M-a" (lambda () (interactive) (other-window 1)))
@@ -333,7 +386,7 @@
    '(:foreground default :background default :scale 1.5 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
 		 ("begin" "$1" "$" "$$" "\\(" "\\[")))
  '(package-selected-packages
-   '(haskell-emacs haskell-tab-indent haskell-mode rust-mode auctex yasnippet-snippets yasnippet cobol-mode sxhkdrc-mode solarized-theme ediprolog beacon sly nord-theme minizinc-mode dracula-theme ess geiser-racket geiser auto-complete flycheck color-theme-modern neotree evil))
+   '(color-theme-sanityinc-tomorrow ef-themes material-theme gruvbox-theme acme-theme monokai-pro-theme vterm lsp-jedi lsp-pyright lsp-mode lsp-java company-coq haskell-emacs haskell-tab-indent haskell-mode rust-mode auctex yasnippet-snippets yasnippet cobol-mode sxhkdrc-mode solarized-theme ediprolog beacon sly nord-theme minizinc-mode dracula-theme ess auto-complete flycheck color-theme-modern neotree evil))
  '(warning-suppress-types '((comp) (comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
