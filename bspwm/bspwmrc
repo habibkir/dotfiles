@@ -19,3 +19,11 @@ bspc rule -a Emacs state=tiled
 
 setxkbmap -layout us,it -option grp:win_space_toggle
 feh --bg-center ~/Pictures/wallpapers/blackstar-fuck.png
+
+# top bar
+polybar &
+
+# dock
+bspc rule -a tint2 layer=top
+tint2 ~/stolen-dotfiles/king-byte/tint2/panellauncher.tint2rc &
+~/.config/bspwm/bar-thing & # sets bottom padding to 0 after tint2 hides

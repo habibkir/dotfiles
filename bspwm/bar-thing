@@ -1,0 +1,4 @@
+#! /usr/bin/bash
+
+sleep 4 # wait for dock to disappear
+bspc config bottom_padding 0 # act now that the dock is dead

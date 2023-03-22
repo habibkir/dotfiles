@@ -1,0 +1,69 @@
+# stolen from king byte on github
+# I'm only using this for the launchers, so I'm only copying the launcher background config 
+
+# docs (not mine) at https://gitlab.com/o9000/tint2/blob/master/doc/tint2.md
+
+## Background "6": Launcher, Panel, Systray
+rounded = 10
+border_width = 0
+border_sides = TBLR
+border_content_tint_weight = 0
+background_content_tint_weight = 0
+background_color = #2d2d2d 100
+border_color = #ebdbb2 100
+background_color_hover = #ffffff 100
+border_color_hover = #000000 100
+background_color_pressed = #ebdbb2 100
+border_color_pressed = #ebdbb2 100
+
+##-------------------------------------
+## Panel
+# general
+panel_items = L
+panel_monitor = all
+panel_position = bottom center horizontal
+panel_size = 33% 48 # 33% (of screen) width, 48 (pixels) height
+
+# don't know what they mean but it doesn't matter if they're zero
+scale_relative_to_dpi = 0
+scale_relative_to_screen_height = 0
+
+# position relative to screen border or some shit
+panel_padding = 0 0 10
+panel_margin = 440 10
+panel_background_id = 1
+wm_menu = 1
+panel_dock = 1
+
+panel_pivot_struts = 0
+strut_policy = none
+
+# panel_window_name = tint2 # hail the default
+disable_transparency = 1
+mouse_effects = 0
+
+# autohide
+autohide = 1
+autohide_show_timeout = 0.0
+autohide_hide_timeout = 3.0
+autohide_height = 2
+
+
+#-------------------------------------
+# Launcher
+launcher_background_id = 1
+
+launcher_item_app = /usr/share/applications/firefox.desktop
+launcher_item_app = /usr/share/applications/emacs.desktop
+launcher_item_app = /usr/share/applications/st.desktop
+launcher_item_app = /usr/share/applications/pcmanfm.desktop
+
+
+launcher_padding = 20 8 28
+launcher_icon_background_id = 0
+launcher_icon_size = 36
+launcher_icon_asb = 100 0 0
+launcher_icon_theme = gruvbox_dark
+launcher_icon_theme_override = 0
+startup_notifications = 0
+launcher_tooltip = 1

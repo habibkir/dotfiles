@@ -3,21 +3,17 @@
 super + Return
 	st
 
-# best editor
-super + shift + p
+# best editor C-M-x butterfly
+ctrl + alt + x
 	emacs ~
 
-# program launcher
-alt + d
-	dmenu_run
-
 # other program launcher
-super + p
+alt + d
 	rofi -combi-modi window,drun,ssh,combi \
-        -theme solarized \
+        -theme gruvbox-dark-soft \
         -font "hack 10" \
         -show combi \
-        -icon-theme "Breeze Dark" -show-icons
+        -icon-theme "gruvbox_dark" -show-icons
 
 # make sxhkd reload its configuration files:
 super + Escape
@@ -37,9 +33,21 @@ super + {_,shift + }w
 alt + shift + q
 	bspc node -k
 
+# toggle bar
+super + shift + b
+	{polybar-msg cmd hide ; bspc config top_padding +0, \
+	 polybar-msg cmd show ; bspc config top_padding 38 }
+
+# show dock (shitty hack that because)
+super + p
+	xdotool mousemove 960 1068 sleep 0.1 mousemove restore
+
 # alternate between the tiled and monocle layout
+# and hide bar if necessairy
 super + m
-	bspc desktop -l next
+	{bspc desktop -l monocle; polybar-msg cmd hide; bspc config top_padding +0, \
+	 bspc desktop -l tiled; polybar-msg cmd show; bspc config top_padding 38 }
+
 
 # send the newest marked node to the newest preselected node
 super + y

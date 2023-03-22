@@ -315,8 +315,24 @@ globalkeys = gears.table.join(
 
               {description = "restore minimized", group = "client"}),
 
+
+    -- Volume and brightness keys
+    -- beware of user defined bindings, mildly stolen from reddit
+    -- https://old.reddit.com/r/awesomewm/comments/nkgdgn/volume_and_brightness_keys/
+    awful.key({}, "XF86MonBrightnessUp", function() awful.spawn("light -A 0.5")              end,
+    {description = "raise brightness", group = "hotkeys"}),
+    awful.key({}, "XF86MonBrightnessDown", function() awful.spawn("light -U 0.5")            end,
+    {description = "lower brightness", group = "hotkeys"}),
+    awful.key({}, "XF86AudioRaiseVolume", function() awful.spawn("amixer set Master 5%+")    end,
+    {description = "raise volume", group = "hotkeys"}),
+    awful.key({}, "XF86AudioLowerVolume", function() awful.spawn("amixer set Master 5%-")    end,
+    {description = "lower volume", group = "hotkeys"}),
+    awful.key({}, "XF86AudioMute", function()   awful.spawn("amixer -q set Master toggle")   end,
+    {description = "toggle mute", group = "hotkeys"}),
+
     -- User defined launchers
-    awful.key({ modkey, "Shift"   }, "p", function () awful.spawn("emacs	~")                  end,
+    -- C-M-x launches emacs
+    awful.key({ "Control", "Mod1" }, "x", function () awful.spawn("emacs	~")                  end,
               {description = "open the one true editor", group = "launcher"}),
 
     -- Prompt, User modified, beware
@@ -469,7 +485,10 @@ awful.rules.rules = {
                      buttons = clientbuttons,
                      screen = awful.screen.preferred,
                      placement = awful.placement.no_overlap+awful.placement.no_offscreen,
-		     size_hints_honor = false
+		     size_hints_honor = false,
+		     maximized_vertical = false,
+		     mazimized_horizontal = false,
+		     maximized = false
      }
     },
 
@@ -509,9 +528,6 @@ awful.rules.rules = {
     { rule_any = {type = { "normal", "dialog" }
       }, properties = { titlebars_enabled = false }
     },
-
-    { rule = { class = "Firefox" },
-      properties = { maximized_vertical = false, mazimized_horizontal = false } },
 
     -- Set Firefox to always map on the tag named "2" on screen 1.
     -- { rule = { class = "Firefox" },

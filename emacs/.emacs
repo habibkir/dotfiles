@@ -5,59 +5,61 @@
 (package-initialize)
 ;(package-refresh-contents)
 ;(let ((muh-packages '(
-;		      ;; fundamental
-;		      evil
-;		      neotree
-;		      color-theme-modern
-;		      ;; almost fundamental
-;		      flycheck
-;		      auto-complete
-;		      ;; colours
-;		      color-theme-modern
-;		      dracula-theme
-;		      solarized-theme
-;		      ;; ides
-;		      sly
-;		      ; geiser
-;		      ; geiser-racket
-;		      ; geiser-guile
-;		      ess
-;		      ediprolog
-;		      auctex
-;		      ;; language support
-;		      sxhkdrc-mode (not supported in older emacsen)
-;		      ;; utilities
-;		      beacon
-;		      ;; and this is where things get get stupid
-;		      yasnippet
-;		      yasnippet-snippets
-;		      company
-;		      )))
-;  (mapc (lambda (pkg)
-;	  (unless (package-installed-p pkg)
-;	    (package-install pkg)))
-;	muh-packages))
+		      ;;; required by evil mode on newer emacsen
+		      ;undo-tree
+		      ;undo-fu
+		      ;goto-last-change
+		      ;;; fundamental
+		      ;evil
+		      ;neotree
+		      ;color-theme-modern
+		      ;;; almost fundamental
+		      ;flycheck
+		      ;auto-complete
+		      ;;; colours
+		      ;color-theme-modern
+		      ;dracula-theme
+		      ;solarized-theme
+		      ;;; ides
+		      ;sly
+		      ;; geiser
+		      ;; geiser-racket
+		      ;; geiser-guile
+		      ;ess
+		      ;ediprolog
+		      ;auctex
+		      ;;; language support
+		      ;sxhkdrc-mode ;(not supported in older emacsen)
+		      ;;; utilities
+		      ;beacon
+		      ;;; and this is where things get get stupid
+		      ;yasnippet
+		      ;yasnippet-snippets
+		      ;company
+		      ;olivetti
+		      ;all-the-icons
+		      ;)))
+  ;(mapc (lambda (pkg)
+	  ;(unless (package-installed-p pkg)
+	    ;(package-install pkg)))
+	;muh-packages))
 
 ;;; settings for the packages
 ;;; I have yet to learn use-package
 
+;; evil mode
+; I want insert state to be emacs state, it's just better
+; that said, using emacs and insert mode in a terminal kinda blows, esc never registers right
+(setq evil-disable-insert-state-bindings t)
 (require 'evil)
+(setq evil-esc-delay 0.0)
 (evil-mode 1)
-(evil-emacs-state)
+(evil-normal-state)
 
 ;; neotree
 (require 'neotree)
 (setq neotree-smart-open t)
 
-;; flycheck
-; (require 'flycheck)
-; (global-flycheck-mode)
-
-;; autocomplete
-; (require 'auto-complete)
-; (ac-config-default)
-; (setq ac-auto-start 4)
-; (define-key ac-completing-map "\r" nil)
 ;; company
 (require 'company)
 (add-hook 'after-init-hook  'global-company-mode)
@@ -69,23 +71,23 @@
   (define-key company-active-map (kbd "<tab>") 'company-complete-selection))
 ;; eglot
 (with-eval-after-load 'eglot
-  (add-to-list 'eglot-server-programs
-	       ;; mildly sacrilegous, sorry gerald
-	       '(scheme-mode . ("racket" "-l" "racket-langserver"))))
+  (progn
+    (add-to-list 'eglot-server-programs
+		 ;; mildly sacrilegous, sorry gerald
+		 '(scheme-mode . ("racket" "-l" "racket-langserver")))
+    (add-to-list 'eglot-server-programs
+		 ;; mildly sacrilegous, sorry gerald
+		 '(js-mode . ("npx" "typescript-language-server" "--stdio")))))
 
-(add-hook 'c-mode-hook 'eglot-enusre)
-(add-hook 'c++-mode-hook 'eglot-ensure)
-(add-hook 'scheme-mode-hook 'eglot-ensure)
-(add-hook 'python-mode-hook 'eglot-ensure)
 ;; common lisp has no language server, eh
 
 ;; lsp java
-(require 'lsp-java)
+; (require 'lsp-java)
 (add-hook 'java-mode-hook #'lsp)
 
 ;; general lsp bullshit
 (setq read-process-output-max (* 1024 1024))
-(setq gc-cons-threshold 51200000)
+(setq gc-cons-threshold 102400000)
 
 ;; ess
 (require 'ess)
@@ -107,11 +109,16 @@
 (require 'ob-scheme)
 
 ;;; org
+;; some blaitant theft later
+;; from https://zzamboni.org/post/beautifying-org-mode-in-emacs/
+(setq org-hide-emphasis-markers t)
+
 (add-hook 'org-mode-hook (lambda () (progn
 					(auto-fill-mode)
 					(setq truncate-lines nil)
-					(setq truncate-partial-width-windows nil)
-					(set-fill-column 90))))
+					(setq truncate-partial-width-windows nil)    
+					(org-bullets-mode)
+					(setq fill-column 90))))
 
 (add-to-list 'org-preview-latex-process-alist 'dvipng)
 ;; org language settings
@@ -156,6 +163,8 @@
 (setq auto-save-default nil)
 (setq ring-bell-function 'ignore)
 (setq c-basic-offset 4)
+(setq python-indent-offset 4)
+(setq tab-width 4)
 
 (setq scroll-conservatively most-positive-fixnum)
 
@@ -179,6 +188,10 @@
 (defun docsfag-cmake()
   (interactive)				;
   (eww-open-file "/home/diccu/Documents/lang/cmake/mastering-cmake/bild/html/index.html"))
+
+(defun docsfag-sicp()
+  (interactive)				;
+  (eww-open-file "/home/diccu/Documents/lang/lisp/book/book.html"))
 
 ;; mild yasnippet abuse
 ;; create snippets on the fly from a shorthand
@@ -221,38 +234,34 @@
 ;;; aesthetic changes
 ; (add-to-list 'default-frame-alist '(fullscreen . maximized)) ; (fucks with awesomewm window management)
 (set-face-attribute 'default nil :family "JetBrains Mono" :height 130)
-(add-to-list 'default-frame-alist '(undecorated . t))
 
-;; color themes
-;; load
-;(add-to-list 'custom-theme-load-path
-;	     (file-name-as-directory "~/.emacs.d/elpa/color-theme-modern"))
-;(add-to-list 'custom-theme-load-path
-;	     (file-name-as-directory "~/.emacs.d/elpa/dracula-theme"))
-;(add-to-list 'custom-theme-load-path
-;	     (file-name-as-directory "~/.emacs.d/elpa/"))
-;(add-to-list 'custom-theme-load-path
-;	     (file-name-as-directory "~/.emacs.d/themes/everforest-theme/"))
-;(add-to-list 'custom-theme-load-path
-;	     (file-name-as-directory "~/.emacs.d/themes/"))
-;(setq muh-dark-theme 'material)
-;(setq muh-light-theme 'acme)
-;(setq catppuccin-flavor 'macchiato)
-;(defun going-dark ()
-;  (interactive)
-;  (disable-theme muh-light-theme)
-;  (load-theme muh-dark-theme t t)
-;  (enable-theme muh-dark-theme))
-;(defun going-light ()
-;  (interactive)
-;  (disable-theme muh-dark-theme)
-;  (load-theme muh-light-theme t t)
-;  (enable-theme muh-light-theme))
-(defun going-dark() (interactive) (color-theme-sanityinc-tomorrow-eighties))
-(defun going-light() (interactive) (color-theme-sanityinc-tomorrow-day))
-(going-dark)
-;; Backup themes, dracula, midnight, clarity, cobalt, solarized-dark, deep-blue, catppuccin
-;; aalto-light for light mode
+;; (require 'color-theme-sanityinc-tomorrow)
+
+(use-package color-theme-sanityinc-tomorrow
+  :ensure t
+  :config
+  (defun going-dark() (interactive) (color-theme-sanityinc-tomorrow-eighties))
+  (defun going-light() (interactive) (color-theme-sanityinc-tomorrow-day)))
+
+(use-package doom-themes
+  :ensure t
+  :config
+  (setq doom-themes-enable-bold t
+	doomt-themes-enable-italic t)
+  (load-theme 'doom-one t)
+  (doom-themes-org-config))
+
+(add-to-list 'default-frame-alist '(undecorated . t))
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/everforest-theme")
+(set-face-attribute 'default nil :family "JetBrains Mono" :height 130)
+
+(set-face-attribute 'org-level-1 nil :height 180)
+(set-face-attribute 'org-level-2 nil :height 170)
+(set-face-attribute 'org-level-3 nil :height 160)
+(set-face-attribute 'org-level-4 nil :height 140)
+
+(setq org-hide-emphasis-markers t)
+
 
 ;; clean up interface
 ;; https://github.com/technomancy/better-defaults/blob/master/better-defaults.el
@@ -268,21 +277,46 @@
 (global-set-key "\C-x\C-b" 'ibuffer)
 (global-set-key "\C-x\C-b" 'ibuffer)
 
-;;; extremely unelegant and must be removed once I figure out how to make my keybinds cooler
-(define-key c-mode-map "\M-q" 'neotree-toggle)
-(define-key c++-mode-map "\M-q" 'neotree-toggle)
-(define-key java-mode-map "\M-q" 'neotree-toggle)
-(define-key python-mode-map "\M-q" 'neotree-toggle)
+;;; extremely unelegant and must be removed once I figure out how to
+;;; make my keybinds cooler somebody save me from my own incompetence
+(with-eval-after-load 'c-mode
+	  (define-key c-mode-map (kbd "M-q") 'neotree-toggle))
+(with-eval-after-load 'c++-mode
+	  (define-key c++-mode-map (kbd "M-q") 'neotree-toggle))
+(with-eval-after-load 'java-mode
+	  (define-key java-mode-map (kbd "M-q") 'neotree-toggle))
+(with-eval-after-load 'python-mode
+	  (define-key python-mode-map (kbd "M-q") 'neotree-toggle))
 
-(define-key lisp-mode-map "\M-q" 'neotree-toggle)
-; (define-key scheme-mode-map "\M-q" 'neotree-toggle) ; only works on wayland, I have no fucking clue either
-(define-key emacs-lisp-mode-map "\M-q" 'neotree-toggle)
+(with-eval-after-load 'lisp-mode
+	  (define-key lisp-mode-map (kbd "M-q") 'neotree-toggle))
+(with-eval-after-load 'scheme-mode
+	  (define-key scheme-mode-map (kbd "M-q") 'neotree-toggle))
+(with-eval-after-load 'emacs-lisp-mode
+	  (define-key emacs-lisp-mode-map (kbd "M-q") 'neotree-toggle))
+(with-eval-after-load 'typescript-mode
+	  (define-key typescript-mode-map (kbd "M-q") 'neotree-toggle))
+
+;; javascript repl
+;; fuck my life
+;; https://github.com/abicky/nodejs-repl.el
+(add-hook 'js-mode-hook
+	  (lambda ()
+            (define-key js-mode-map (kbd "M-q") 'neotree-toggle)
+            (define-key js-mode-map (kbd "C-x C-e") 'nodejs-repl-send-last-expression)
+            (define-key js-mode-map (kbd "C-c C-j") 'nodejs-repl-send-line)
+            (define-key js-mode-map (kbd "C-c C-r") 'nodejs-repl-send-region)
+            (define-key js-mode-map (kbd "C-c C-c") 'nodejs-repl-send-buffer)
+            (define-key js-mode-map (kbd "C-c C-l") 'nodejs-repl-load-file)
+            (define-key js-mode-map (kbd "C-c C-z") 'nodejs-repl-switch-to-repl)))
+
 
 ;; neotree
 (global-unset-key "\M-q")
 (global-set-key "\M-q" 'neotree-toggle)
 (global-set-key "\M-w" 'shell-command)
 (global-set-key "\M-a" (lambda () (interactive) (other-window 1)))
+(global-set-key "\M-A" (lambda () (interactive) (other-window -1)))
 
 ;; half stolen from https://stackoverflow.com/questions/2951797/
 ;; because wrap
@@ -291,50 +325,20 @@
 			 (when (region-active-p)
 			   (insert-pair 1 ?$ ?$))))
 
-;; da rifare
-
 (defun prompt-and-expand-shorthand (s)
     "S è abbreviazione di uno snippet, mo' lo genero, mo' lo espando"
   (interactive "sShorthand: ")
   (yas-expand-snippet (create-snippet-from-shorthand s)))
 
-;; the m is for math
+;; the m is for math, I would have limited it to org and latex modes but me lazy
 (global-set-key (kbd "C-c m") 'prompt-and-expand-shorthand)
 
-;; evil specific keybinds
-;; keep "colon" placement when in normal mode on an Italian keyboard layout
+; evil specific keybinds
+; keep "colon" placement when in normal mode on an Italian keyboard layout
 (evil-define-key 'normal 'global "ç" 'evil-ex)
 
-;; who needs insert mode when you can have the power of God and anime on your side?
-;; mostly carelessly scavanged and frankensteined from evil/simple.el code
-;; but it works
-(evil-define-key 'normal 'global "i" 'evil-emacs-state)
-(evil-define-key 'normal 'global "a"
-  (lambda () (interactive)
-    (forward-char)
-    (evil-emacs-state)))
-(evil-define-key 'normal 'global "I"
-  (lambda () (interactive)
-    (evil-first-non-blank)
-    (evil-emacs-state)))
-(evil-define-key 'normal 'global "A"
-  (lambda () (interactive)
-    (move-end-of-line nil)
-    (evil-emacs-state)))
-(evil-define-key 'normal 'global "O"
-  (lambda () (interactive)
-    (move-beginning-of-line nil)
-    (open-line 1)
-    (indent-according-to-mode)
-    (evil-emacs-state)))
-(evil-define-key 'normal 'global "o"
-  (lambda () (interactive)
-    (move-end-of-line 1)
-    (insert "\n")
-    (indent-according-to-mode)
-    (evil-emacs-state)))
-(evil-define-key 'emacs 'global (kbd "<escape>") 'evil-normal-state)
-
+;; insert mode is useless before the glory of emacs mode
+;; although these bindings kinda ruin everything when running in a terminal, so 
 ;; evil leader keybinds
 (evil-set-leader 'normal (kbd "SPC"))
 (evil-set-leader 'insert (kbd "M-SPC"))
@@ -373,26 +377,22 @@
 (evil-define-key 'normal neotree-mode-map (kbd "g") 'neotree-refresh)
 (evil-define-key 'normal neotree-mode-map (kbd "q") 'neotree-hide)
 
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("750d7a59c8d5f1e7afd6cdecbed71fe1071633c4d8ed0ff5cce39bde55310797" "51d164fa3e9ca7595ef2646114b0c0a681b6cfadd4093dd1ef4b8ae31a188889" "37768a79b479684b0756dec7c0fc7652082910c37d8863c35b702db3f16000f8" "45482e7ddf47ab1f30fe05f75e5f2d2118635f5797687e88571842ff6f18b4d5" default))
+   '("02f57ef0a20b7f61adce51445b68b2a7e832648ce2e7efb19d217b6454c1b644" default))
  '(inhibit-startup-screen t)
- '(org-confirm-babel-evaluate nil)
- '(org-format-latex-options
-   '(:foreground default :background default :scale 1.5 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
-		 ("begin" "$1" "$" "$$" "\\(" "\\[")))
  '(package-selected-packages
-   '(color-theme-sanityinc-tomorrow ef-themes material-theme gruvbox-theme acme-theme monokai-pro-theme vterm lsp-jedi lsp-pyright lsp-mode lsp-java company-coq haskell-emacs haskell-tab-indent haskell-mode rust-mode auctex yasnippet-snippets yasnippet cobol-mode sxhkdrc-mode solarized-theme ediprolog beacon sly nord-theme minizinc-mode dracula-theme ess auto-complete flycheck color-theme-modern neotree evil))
- '(warning-suppress-types '((comp) (comp))))
+   '(lsp-mode typescript-mode jedi neotree color-theme-modern minizinc-mode beacon ediprolog solarized-theme cobol-mode rust-mode haskell-tab-indent haskell-emacs company-coq vterm monokai-pro-theme acme-theme gruvbox-theme material-theme ef-themes color-theme-sanityinc-tomorrow flycheck auto-complete compat ess dracula-theme nord-theme sly sxhkdrc-mode yasnippet-snippets auctex haskell-mode goto-last-change undo-tree undo-fu evil js2-mode js-comint nodejs-repl elpy doom-themes olivetti all-the-icons org-bullets))
+ '(tab-width 4))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-(put 'upcase-region 'disabled nil)
-(put 'downcase-region 'disabled nil)
